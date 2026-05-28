@@ -1,122 +1,166 @@
-//
-//  ContentView.swift
-//  SmartTrip
-//
-//  Created by Joe on 2026/5/27.
-//
-
 import SwiftUI
-
-
 
 struct ContentView: View {
     @State private var destination = "东京"
-        @State private var days = "3"
-        @State private var lodgingStatus = "recommend"
-        @State private var lodgingArea = ""
-        @State private var selectedPreferences: Set<String> = ["美食", "购物", "拍照", "轻松"]
+    @State private var days = "3"
+    @State private var lodgingStatus = "recommend"
+    @State private var lodgingArea = ""
+    @State private var selectedPreferences: Set<String> = ["美食", "购物", "拍照", "轻松"]
+    @State private var showPasteGuide = false
 
-        let preferences = ["美食", "购物", "拍照", "轻松"]
+
+    private let preferences = ["美食", "购物", "拍照", "轻松", "不想太赶"]
+
+    private var trimmedDestination: String {
+        destination.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var trimmedDays: String {
+        days.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var trimmedLodgingArea: String {
+        lodgingArea.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var isFormValid: Bool {
+        !trimmedDestination.isEmpty
+        && !trimmedDays.isEmpty
+        && (lodgingStatus == "recommend" || !trimmedLodgingArea.isEmpty)
+    }
+    
     var body: some View {
         NavigationStack {
-                   ScrollView {
-                       VStack(alignment: .leading, spacing: 24) {
-                           Text("新建旅行")
-                               .font(.largeTitle)
-                               .fontWeight(.bold)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    Text("新建旅行")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
 
-                           VStack(alignment: .leading, spacing: 12) {
-                               Text("目的地")
-                                   .font(.headline)
+                    inputSection(
+                        title: "目的地",
+                        placeholder: "例如：东京",
+                        text: $destination,
+                        validationMessage: trimmedDestination.isEmpty ? "请输入目的地" : nil
+                    )
+                    inputSection(
+                        title: "天数",
+                        placeholder: "例如：3",
+                        text: $days,
+                        validationMessage: trimmedDays.isEmpty ? "请输入旅行天数" : nil
+                    )
+                    .keyboardType(.numberPad)
+                    .onChange(of: days) { _, newValue in
+                        days = newValue.filter { $0.isNumber }
+                    }
 
-                               TextField("例如：东京", text: $destination)
-                                   .textFieldStyle(.roundedBorder)
-                           }
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("住宿状态")
+                            .font(.headline)
 
-                           VStack(alignment: .leading, spacing: 12) {
-                               Text("天数")
-                                   .font(.headline)
+                        Picker("住宿状态", selection: $lodgingStatus) {
+                            Text("已决定").tag("decided")
+                            Text("帮我推荐").tag("recommend")
+                        }
+                        .pickerStyle(.segmented)
 
-                               TextField("例如：3", text: $days)
-                                   .textFieldStyle(.roundedBorder)
-                                   .keyboardType(.numberPad)
-                           }
+                        if lodgingStatus == "decided" {
+                            TextField("例如：新宿", text: $lodgingArea)
+                                .textFieldStyle(.roundedBorder)
 
-                           VStack(alignment: .leading, spacing: 12) {
-                               Text("住宿状态")
-                                   .font(.headline)
+                            if trimmedLodgingArea.isEmpty {
+                                validationText("请输入住宿区域")
+                            }
+                        }
+                    }
 
-                               Picker("住宿状态", selection: $lodgingStatus) {
-                                   Text("我已经订好/决定住宿位置").tag("decided")
-                                   Text("我还没决定，帮我推荐").tag("recommend")
-                               }
-                               .pickerStyle(.segmented)
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("旅行偏好")
+                            .font(.headline)
 
-                               if lodgingStatus == "decided" {
-                                   TextField("例如：新宿", text: $lodgingArea)
-                                       .textFieldStyle(.roundedBorder)
-                               }
-                           }
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 92))], spacing: 12) {
+                            ForEach(preferences, id: \.self) { preference in
+                                preferenceButton(preference)
+                            }
+                        }
+                    }
 
-                           VStack(alignment: .leading, spacing: 12) {
-                               Text("旅行偏好")
-                                   .font(.headline)
+                    Button {
+                        showPasteGuide = true
+                    } label: {
+                        Text("下一步")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(isFormValid ? Color.blue : Color.gray.opacity(0.35))
+                            .foregroundStyle(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                    }
+                    .disabled(!isFormValid)
+                    .padding(.top, 8)
+                    .navigationDestination(isPresented: $showPasteGuide) {
+                        PasteGuideView(
+                            destination: trimmedDestination,
+                            days: trimmedDays,
+                            lodgingStatus: lodgingStatus,
+                            lodgingArea: trimmedLodgingArea,
+                            preferences: Array(selectedPreferences).sorted()
+                        )
+                    }
+                }
+                .padding(24)
+            }
+            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
 
-                               LazyVGrid(columns: [GridItem(.adaptive(minimum: 90))], spacing: 12) {
-                                   ForEach(preferences, id: \.self) { preference in
-                                       Button {
-                                           if selectedPreferences.contains(preference) {
-                                               selectedPreferences.remove(preference)
-                                           } else {
-                                               selectedPreferences.insert(preference)
-                                           }
-                                       } label: {
-                                           Text(preference)
-                                               .font(.subheadline)
-                                               .fontWeight(.medium)
-                                               .frame(maxWidth: .infinity)
-                                               .padding(.vertical, 10)
-                                               .background(
-                                                   selectedPreferences.contains(preference)
-                                                   ? Color.blue.opacity(0.15)
-                                                   : Color.gray.opacity(0.12)
-                                               )
-                                               .foregroundStyle(
-                                                   selectedPreferences.contains(preference)
-                                                   ? Color.blue
-                                                   : Color.primary
-                                               )
-                                               .clipShape(RoundedRectangle(cornerRadius: 10))
-                                       }
-                                   }
-                               }
-                           }
+    private func inputSection(
+        title: String,
+        placeholder: String,
+        text: Binding<String>,
+        validationMessage: String? = nil
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(title)
+                .font(.headline)
 
-                           NavigationLink {
-                               PasteGuideView(
-                                       destination: destination,
-                                       days: days,
-                                       lodgingStatus: lodgingStatus,
-                                       lodgingArea: lodgingArea,
-                                       preferences: Array(selectedPreferences).sorted()
-                                   )
-                           } label: {
-                               Text("下一步")
-                                   .font(.headline)
-                                   .frame(maxWidth: .infinity)
-                                   .padding()
-                                   .background(Color.blue)
-                                   .foregroundStyle(.white)
-                                   .clipShape(RoundedRectangle(cornerRadius: 14))
-                           }
-                           .padding(.top, 12)
-                       }
-                       .padding(24)
-                   }
-               }
+            TextField(placeholder, text: text)
+                .textFieldStyle(.roundedBorder)
+
+            if let validationMessage {
+                validationText(validationMessage)
+            }
+        }
+    }
+
+    private func validationText(_ message: String) -> some View {
+        Text(message)
+            .font(.caption)
+            .foregroundStyle(.red)
+    }
+
+    private func preferenceButton(_ preference: String) -> some View {
+        Button {
+            if selectedPreferences.contains(preference) {
+                selectedPreferences.remove(preference)
+            } else {
+                selectedPreferences.insert(preference)
+            }
+        } label: {
+            Text(preference)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(selectedPreferences.contains(preference) ? Color.blue.opacity(0.15) : Color.gray.opacity(0.12))
+                .foregroundStyle(selectedPreferences.contains(preference) ? Color.blue : Color.primary)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+        }
     }
 }
 
-#Preview {
-    ContentView()
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+    }
 }

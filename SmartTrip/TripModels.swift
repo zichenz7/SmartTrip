@@ -1,10 +1,3 @@
-//
-//  TripModels.swift
-//  SmartTrip
-//
-//  Created by 竺子宸 on 2026/5/27.
-//
-
 import Foundation
 
 struct PlaceItem: Identifiable {
@@ -52,7 +45,7 @@ struct SampleTripData {
             BackupArea(area: "浅草", reason: "更适合传统东京氛围，但去涩谷较远。")
         ]
     )
-    
+
     static let mustGoPlaces = [
         PlaceItem(name: "浅草寺", reason: "东京经典地标，适合拍照。"),
         PlaceItem(name: "东京晴空塔", reason: "夜景好，适合傍晚安排。"),
@@ -60,20 +53,20 @@ struct SampleTripData {
         PlaceItem(name: "明治神宫", reason: "安静，适合轻松散步。"),
         PlaceItem(name: "代官山", reason: "适合咖啡、街拍和慢逛。")
     ]
-    
+
     static let optionalPlaces = [
         PlaceItem(name: "银座", reason: "购物体验好，但和涩谷、新宿有重复。"),
         PlaceItem(name: "东京塔", reason: "适合外拍，不一定需要登塔。"),
         PlaceItem(name: "秋叶原", reason: "适合动漫和电器兴趣。"),
         PlaceItem(name: "上野公园", reason: "樱花季或想看博物馆时更适合。")
     ]
-    
+
     static let skippedPlaces = [
         PlaceItem(name: "皇居", reason: "3 天游优先级较低。"),
         PlaceItem(name: "代代木公园", reason: "和明治神宫体验重复。"),
         PlaceItem(name: "表参道", reason: "和涩谷、代官山的购物街区体验重复。")
     ]
-    
+
     static let days = [
         DayPlan(
             day: 1,

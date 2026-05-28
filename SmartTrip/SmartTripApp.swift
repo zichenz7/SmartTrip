@@ -2,7 +2,7 @@
 //  SmartTripApp.swift
 //  SmartTrip
 //
-//  Created by 竺子宸 on 2026/5/27.
+//  Created by Joe on 2026/5/27.
 //
 
 import SwiftUI
@@ -12,6 +12,7 @@ struct SmartTripApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+            
         }
     }
 }

@@ -6,8 +6,14 @@ struct ResultView: View {
     let lodgingStatus: String
     let lodgingArea: String
     let preferences: [String]
+    let tripPlan: TripPlan?
 
     @State private var dayAdjustmentModes: [Int: AdjustmentMode] = [:]
+    @State private var expandedTransportDays: Set<Int> = []
+
+    private var plan: TripPlan {
+        tripPlan ?? SampleTripData.tripPlan
+    }
 
     private enum AdjustmentMode: String {
         case standard = "标准行程"
@@ -38,16 +44,18 @@ struct ResultView: View {
                 .font(.largeTitle)
                 .fontWeight(.bold)
 
-            HStack(spacing: 10) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 86), spacing: 8)], alignment: .leading, spacing: 8) {
                 summaryPill("强度适中")
                 summaryPill("每日可调整")
-                summaryPill(preferences.first ?? "自由行")
+                ForEach(displayedPreferences, id: \.self) { preference in
+                    summaryPill(preference)
+                }
             }
 
             HStack(spacing: 12) {
                 metricBox(title: "行程天数", value: "\(days) 天")
                 metricBox(title: "主要路线", value: "3 条")
-                metricBox(title: "优先地点", value: "\(SampleTripData.mustGoPlaces.count) 个")
+                metricBox(title: "优先地点", value: "\(plan.mustGoPlaces.count) 个")
             }
         }
         .padding(.bottom, 4)
@@ -55,27 +63,19 @@ struct ResultView: View {
 
     private var lodgingCard: some View {
         sectionCard(title: "住宿建议", accent: .blue) {
-            if lodgingStatus == "decided" {
-                Text("\(lodgingArea.isEmpty ? "当前住宿区域" : lodgingArea)：适合")
-                    .font(.title3)
-                    .fontWeight(.bold)
-                Text("交通方便，适合围绕你的攻略地点生成路线。")
-                    .foregroundStyle(.secondary)
-            } else {
-                Text(SampleTripData.lodgingAdvice.title)
-                    .font(.title3)
-                    .fontWeight(.bold)
-                Text(SampleTripData.lodgingAdvice.summary)
-                    .foregroundStyle(.secondary)
-            }
+            Text(plan.lodgingAdvice.title)
+                .font(.title3)
+                .fontWeight(.bold)
+            Text(plan.lodgingAdvice.summary)
+                .foregroundStyle(.secondary)
 
-            bulletList(SampleTripData.lodgingAdvice.reasons)
+            bulletList(plan.lodgingAdvice.reasons)
 
             if lodgingStatus == "recommend" {
                 Divider()
                 Text("备选区域")
                     .font(.headline)
-                ForEach(SampleTripData.lodgingAdvice.backupAreas) { item in
+                ForEach(plan.lodgingAdvice.backupAreas) { item in
                     HStack(alignment: .top, spacing: 8) {
                         Text(item.area)
                             .font(.subheadline)
@@ -91,22 +91,26 @@ struct ResultView: View {
         }
     }
 
+    private var displayedPreferences: [String] {
+        preferences.isEmpty ? ["自由行"] : preferences
+    }
+
     private var placeCategoryCard: some View {
         sectionCard(title: "地点分类", accent: .green) {
-            placeList(title: "必去", places: SampleTripData.mustGoPlaces, color: .green)
+            placeList(title: "必去", places: plan.mustGoPlaces, color: .green)
             Divider()
-            placeList(title: "可选", places: SampleTripData.optionalPlaces, color: .orange)
+            placeList(title: "可选", places: plan.optionalPlaces, color: .orange)
             Divider()
-            placeList(title: "舍弃", places: SampleTripData.skippedPlaces, color: .gray)
+            placeList(title: "舍弃", places: plan.skippedPlaces, color: .gray)
         }
     }
 
     private var itineraryCard: some View {
         sectionCard(title: "每日行程", accent: .purple) {
-            ForEach(SampleTripData.days) { day in
+            ForEach(plan.days) { day in
                 dayCard(day)
 
-                if day.day != SampleTripData.days.last?.day {
+                if day.day != plan.days.last?.day {
                     Spacer(minLength: 2)
                 }
             }
@@ -172,13 +176,14 @@ struct ResultView: View {
 
     private func dayCard(_ day: DayPlan) -> some View {
         let mode = adjustmentMode(for: day)
+        let display = displayPlan(for: day, mode: mode)
 
         return VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
                 Text("Day \(day.day)")
                     .font(.headline)
                 Spacer()
-                Text(mode == .standard ? day.intensity : mode.rawValue)
+                Text(mode == .standard ? display.intensity : mode.rawValue)
                     .font(.caption)
                     .fontWeight(.semibold)
                     .padding(.horizontal, 9)
@@ -188,19 +193,53 @@ struct ResultView: View {
                     .clipShape(Capsule())
             }
 
-            Text(adjustedRoute(for: day, mode: mode))
+            Text(display.route)
                 .font(.subheadline)
                 .fontWeight(.semibold)
 
             HStack(spacing: 10) {
-                compactMetric("交通", day.transportTime)
-                compactMetric("步数", day.steps)
+                compactMetric("交通", display.transportTime)
+                compactMetric("步数", display.steps)
             }
 
-            Text(adjustedAdvice(for: day, mode: mode))
+            Button {
+                toggleTransportDetails(for: day)
+            } label: {
+                HStack {
+                    Text(isTransportExpanded(for: day) ? "收起交通详情" : "查看交通详情")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                    Spacer()
+                    Image(systemName: isTransportExpanded(for: day) ? "chevron.up" : "chevron.down")
+                        .font(.caption)
+                }
+                .padding(10)
+                .background(Color.orange.opacity(0.1))
+                .foregroundStyle(.orange)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+            }
+
+            if isTransportExpanded(for: day) {
+                VStack(alignment: .leading, spacing: 7) {
+                    ForEach(display.transportDetails, id: \.self) { detail in
+                        HStack(alignment: .top, spacing: 8) {
+                            Text("•")
+                                .foregroundStyle(.orange)
+                            Text(detail)
+                                .font(.caption)
+                        }
+                    }
+                }
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.orange.opacity(0.06))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+            }
+
+            Text(display.advice)
                 .font(.subheadline)
 
-            Text("调整说明：\(adjustedAlternative(for: day, mode: mode))")
+            Text("\(mode == .standard ? "当前说明" : "调整说明")：\(display.note)")
                 .font(.subheadline)
                 .foregroundStyle(.blue)
                 .padding(10)
@@ -280,74 +319,70 @@ struct ResultView: View {
         dayAdjustmentModes[day.day, default: .standard]
     }
 
-    private func adjustedRoute(for day: DayPlan, mode: AdjustmentMode) -> String {
-        switch mode {
-        case .standard:
-            return day.route
-        case .rain:
-            switch day.day {
-            case 1: return "浅草寺 -> 东京晴空塔商场 -> 银座"
-            case 2: return "筑地市场 -> 涩谷商场区"
-            default: return "明治神宫短停 -> 代官山咖啡 -> 新宿"
-            }
-        case .late:
-            switch day.day {
-            case 1: return "浅草寺 -> 东京晴空塔"
-            case 2: return "筑地市场 -> 涩谷"
-            default: return "代官山 -> 新宿"
-            }
-        case .tired:
-            switch day.day {
-            case 1: return "浅草寺 -> 东京晴空塔"
-            case 2: return "涩谷周边慢逛"
-            default: return "新宿附近活动"
-            }
-        case .shopping:
-            switch day.day {
-            case 1: return "浅草寺 -> 东京晴空塔 -> 银座购物"
-            case 2: return "筑地市场 -> 涩谷购物"
-            default: return "代官山 -> 新宿购物"
-            }
-        case .photo:
-            switch day.day {
-            case 1: return "浅草寺 -> 东京晴空塔夜景"
-            case 2: return "筑地市场 -> 东京塔外拍 -> 涩谷路口"
-            default: return "明治神宫 -> 代官山街拍"
-            }
+    private struct DayDisplayPlan {
+        let route: String
+        let intensity: String
+        let transportTime: String
+        let transportDetails: [String]
+        let steps: String
+        let advice: String
+        let note: String
+    }
+
+    private func displayPlan(for day: DayPlan, mode: AdjustmentMode) -> DayDisplayPlan {
+        if let adjustment = adjustmentData(for: day, mode: mode) {
+            return DayDisplayPlan(
+                route: adjustment.route,
+                intensity: adjustment.intensity,
+                transportTime: adjustment.transportTime,
+                transportDetails: adjustment.transportDetails,
+                steps: adjustment.steps,
+                advice: adjustment.advice,
+                note: adjustment.adjustmentNote
+            )
+        }
+
+        return DayDisplayPlan(
+            route: day.route,
+            intensity: day.intensity,
+            transportTime: day.transportTime,
+            transportDetails: day.transportDetails,
+            steps: day.steps,
+            advice: day.advice,
+            note: "当前为标准行程。下面的按钮可以按临时状态切换这一天的路线。"
+        )
+    }
+
+    private func isTransportExpanded(for day: DayPlan) -> Bool {
+        expandedTransportDays.contains(day.day)
+    }
+
+    private func toggleTransportDetails(for day: DayPlan) {
+        if expandedTransportDays.contains(day.day) {
+            expandedTransportDays.remove(day.day)
+        } else {
+            expandedTransportDays.insert(day.day)
         }
     }
 
-    private func adjustedAdvice(for day: DayPlan, mode: AdjustmentMode) -> String {
-        switch mode {
-        case .standard:
-            return day.advice
-        case .rain:
-            return "尽量把户外步行压缩到换乘和短暂停留，优先选择有室内空间的地点。"
-        case .late:
-            return "从中午开始也能走完，先去最核心地点，不再追求打卡数量。"
-        case .tired:
-            return "今天以少换乘、少步行为优先，保留一个主目标就够了。"
-        case .shopping:
-            return "把晚上时间留给商场和街区，不要把购物安排得太碎。"
-        case .photo:
-            return "优先卡傍晚和夜景时间，减少普通购物点停留。"
+    private func adjustmentData(for day: DayPlan, mode: AdjustmentMode) -> DayAdjustment? {
+        guard let adjustments = day.adjustments else {
+            return nil
         }
-    }
 
-    private func adjustedAlternative(for day: DayPlan, mode: AdjustmentMode) -> String {
         switch mode {
         case .standard:
-            return day.easyAlternative
+            return nil
         case .rain:
-            return "如果雨很大，就把户外点缩短，只保留室内商场、咖啡和观景。"
+            return adjustments.rain
         case .late:
-            return "直接删除当天最后一个地点，把节奏放慢。"
+            return adjustments.late
         case .tired:
-            return "只留住宿区域附近的一个核心活动，其他地点改成下次。"
+            return adjustments.tired
         case .shopping:
-            return "删掉一个景点，把时间让给涩谷、新宿或银座。"
+            return adjustments.shopping
         case .photo:
-            return "只保留最出片的路线，把普通逛街点后移。"
+            return adjustments.photo
         }
     }
 
@@ -377,7 +412,8 @@ struct ResultView_Previews: PreviewProvider {
                 days: "3",
                 lodgingStatus: "recommend",
                 lodgingArea: "",
-                preferences: ["美食", "购物", "拍照", "轻松"]
+                preferences: ["美食", "购物", "拍照", "轻松"],
+                tripPlan: SampleTripData.tripPlan
             )
         }
     }

@@ -1,33 +1,83 @@
 import Foundation
 
-struct PlaceItem: Identifiable {
+struct PlaceItem: Identifiable, Codable {
     let id = UUID()
     let name: String
     let reason: String
+
+    enum CodingKeys: String, CodingKey {
+        case name
+        case reason
+    }
 }
 
-struct BackupArea: Identifiable {
+struct BackupArea: Identifiable, Codable {
     let id = UUID()
     let area: String
     let reason: String
+
+    enum CodingKeys: String, CodingKey {
+        case area
+        case reason
+    }
 }
 
-struct LodgingAdvice {
+struct LodgingAdvice: Codable {
     let title: String
     let summary: String
     let reasons: [String]
     let backupAreas: [BackupArea]
 }
 
-struct DayPlan: Identifiable {
+struct DayPlan: Identifiable, Codable {
     let id = UUID()
     let day: Int
     let route: String
     let intensity: String
     let transportTime: String
+    let transportDetails: [String]
     let steps: String
     let advice: String
     let easyAlternative: String
+    let adjustments: DayAdjustments?
+
+    enum CodingKeys: String, CodingKey {
+        case day
+        case route
+        case intensity
+        case transportTime
+        case transportDetails
+        case steps
+        case advice
+        case easyAlternative
+        case adjustments
+    }
+}
+
+struct TripPlan: Codable {
+    let lodgingAdvice: LodgingAdvice
+    let mustGoPlaces: [PlaceItem]
+    let optionalPlaces: [PlaceItem]
+    let skippedPlaces: [PlaceItem]
+    let days: [DayPlan]
+}
+
+struct DayAdjustment: Codable {
+    let route: String
+    let intensity: String
+    let transportTime: String
+    let transportDetails: [String]
+    let steps: String
+    let advice: String
+    let adjustmentNote: String
+}
+
+struct DayAdjustments: Codable {
+    let rain: DayAdjustment
+    let late: DayAdjustment
+    let tired: DayAdjustment
+    let shopping: DayAdjustment
+    let photo: DayAdjustment
 }
 
 struct SampleTripData {
@@ -73,27 +123,53 @@ struct SampleTripData {
             route: "浅草寺 -> 东京晴空塔 -> 银座",
             intensity: "适中",
             transportTime: "90-110 分钟",
+            transportDetails: [
+                "住宿地 -> 浅草寺：地铁约 30 分钟",
+                "浅草寺 -> 东京晴空塔：步行或地铁约 15-20 分钟",
+                "东京晴空塔 -> 银座：地铁约 35 分钟"
+            ],
             steps: "12000-15000 步",
             advice: "东京晴空塔适合傍晚去，银座不要逛太晚。",
-            easyAlternative: "删掉银座，只保留浅草寺和东京晴空塔。"
+            easyAlternative: "删掉银座，只保留浅草寺和东京晴空塔。",
+            adjustments: nil
         ),
         DayPlan(
             day: 2,
             route: "筑地市场 -> 东京塔 -> 涩谷",
             intensity: "适中",
             transportTime: "65-85 分钟",
+            transportDetails: [
+                "住宿地 -> 筑地市场：地铁约 25 分钟",
+                "筑地市场 -> 东京塔：地铁加步行约 25 分钟",
+                "东京塔 -> 涩谷：地铁约 25 分钟"
+            ],
             steps: "11000-14000 步",
             advice: "筑地市场尽量上午去，东京塔可以只外拍。",
-            easyAlternative: "删掉东京塔，增加涩谷闲逛时间。"
+            easyAlternative: "删掉东京塔，增加涩谷闲逛时间。",
+            adjustments: nil
         ),
         DayPlan(
             day: 3,
             route: "明治神宫 -> 代官山 -> 新宿",
             intensity: "轻松",
             transportTime: "35-50 分钟",
+            transportDetails: [
+                "住宿地 -> 明治神宫：地铁约 15 分钟",
+                "明治神宫 -> 代官山：地铁约 20 分钟",
+                "代官山 -> 新宿：地铁约 15 分钟"
+            ],
             steps: "8000-11000 步",
             advice: "最后一天安排轻松一点，方便买伴手礼。",
-            easyAlternative: "如果很累，直接在新宿附近活动。"
+            easyAlternative: "如果很累，直接在新宿附近活动。",
+            adjustments: nil
         )
     ]
+
+    static let tripPlan = TripPlan(
+        lodgingAdvice: lodgingAdvice,
+        mustGoPlaces: mustGoPlaces,
+        optionalPlaces: optionalPlaces,
+        skippedPlaces: skippedPlaces,
+        days: days
+    )
 }

@@ -7,6 +7,7 @@ struct ContentView: View {
     @State private var lodgingArea = ""
     @State private var selectedPreferences: Set<String> = ["美食", "购物", "拍照", "轻松"]
     @State private var showPasteGuide = false
+    @State private var showOnboarding = false
 
 
     private let preferences = ["美食", "购物", "拍照", "轻松", "不想太赶"]
@@ -33,9 +34,26 @@ struct ContentView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
-                    Text("新建旅行")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
+                    HStack(alignment: .firstTextBaseline) {
+                        Text("新建旅行")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+
+                        Spacer()
+
+                        Button {
+                            showOnboarding = true
+                        } label: {
+                            Label("新手教学", systemImage: "questionmark.circle")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(Color.blue.opacity(0.1))
+                                .foregroundStyle(.blue)
+                                .clipShape(Capsule())
+                        }
+                    }
 
                     inputSection(
                         title: "目的地",
@@ -106,6 +124,9 @@ struct ContentView: View {
                             lodgingArea: trimmedLodgingArea,
                             preferences: Array(selectedPreferences).sorted()
                         )
+                    }
+                    .navigationDestination(isPresented: $showOnboarding) {
+                        OnboardingView()
                     }
                 }
                 .padding(24)

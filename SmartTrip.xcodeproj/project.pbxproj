@@ -12,6 +12,8 @@
 		1A0001010000000000000003 /* PasteGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0002010000000000000003 /* PasteGuideView.swift */; };
 		1A0001010000000000000004 /* ResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0002010000000000000004 /* ResultView.swift */; };
 		1A0001010000000000000005 /* TripModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0002010000000000000005 /* TripModels.swift */; };
+		4D778D742FC955B7004708CC /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D778D752FC955B7004708CC /* OnboardingView.swift */; };
+		4D778D732FC93AC5004708CC /* DeepSeekService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D778D722FC93AB6004708CC /* DeepSeekService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -21,6 +23,8 @@
 		1A0002010000000000000004 /* ResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultView.swift; sourceTree = "<group>"; };
 		1A0002010000000000000005 /* TripModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripModels.swift; sourceTree = "<group>"; };
 		1A0002020000000000000001 /* SmartTrip.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SmartTrip.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4D778D722FC93AB6004708CC /* DeepSeekService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepSeekService.swift; sourceTree = "<group>"; };
+		4D778D752FC955B7004708CC /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -45,8 +49,10 @@
 		1A0004020000000000000001 /* SmartTrip */ = {
 			isa = PBXGroup;
 			children = (
+				4D778D722FC93AB6004708CC /* DeepSeekService.swift */,
 				1A0002010000000000000001 /* SmartTripApp.swift */,
 				1A0002010000000000000002 /* ContentView.swift */,
+				4D778D752FC955B7004708CC /* OnboardingView.swift */,
 				1A0002010000000000000003 /* PasteGuideView.swift */,
 				1A0002010000000000000004 /* ResultView.swift */,
 				1A0002010000000000000005 /* TripModels.swift */,
@@ -131,7 +137,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				1A0001010000000000000001 /* SmartTripApp.swift in Sources */,
+				4D778D732FC93AC5004708CC /* DeepSeekService.swift in Sources */,
 				1A0001010000000000000002 /* ContentView.swift in Sources */,
+				4D778D742FC955B7004708CC /* OnboardingView.swift in Sources */,
 				1A0001010000000000000003 /* PasteGuideView.swift in Sources */,
 				1A0001010000000000000004 /* ResultView.swift in Sources */,
 				1A0001010000000000000005 /* TripModels.swift in Sources */,

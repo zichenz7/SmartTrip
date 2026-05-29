@@ -8,7 +8,11 @@ struct PasteGuideView: View {
     let preferences: [String]
 
     @State private var showResult = false
+    @State private var isGenerating = false
+    @State private var generatedPlan: TripPlan?
+    @State private var errorMessage = ""
     @State private var guideText = """
+
 东京三日游攻略：浅草寺、晴空塔、筑地市场、东京塔、涩谷、明治神宫、代官山都很值得去。想吃海鲜可以去筑地，想购物可以去涩谷和银座。
 """
 
@@ -40,25 +44,52 @@ struct PasteGuideView: View {
                 }
 
                 Button {
-                    showResult = true
+                    Task {
+                        isGenerating = true
+                        errorMessage = ""
+                        generatedPlan = nil
+
+                        do {
+                            generatedPlan = try await DeepSeekService().generateTripPlan(
+                                destination: destination,
+                                days: days,
+                                lodgingStatus: lodgingStatus,
+                                lodgingArea: lodgingArea,
+                                preferences: preferences,
+                                guideText: guideText
+                            )
+                            showResult = true
+                        } catch {
+                            errorMessage = "生成失败：\(error.localizedDescription)"
+                        }
+
+                        isGenerating = false
+                    }
                 } label: {
-                    Text("生成行程")
+                    Text(isGenerating ? "生成中..." : "生成行程")
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(canGenerateTrip ? Color.blue : Color.gray.opacity(0.35))
+                        .background(canGenerateTrip && !isGenerating ? Color.blue : Color.gray.opacity(0.35))
                         .foregroundStyle(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
-                .disabled(!canGenerateTrip)
+                .disabled(!canGenerateTrip || isGenerating)
                 .navigationDestination(isPresented: $showResult) {
                     ResultView(
                         destination: destination,
                         days: days,
                         lodgingStatus: lodgingStatus,
                         lodgingArea: lodgingArea,
-                        preferences: preferences
+                        preferences: preferences,
+                        tripPlan: generatedPlan
                     )
+                }
+
+                if !errorMessage.isEmpty {
+                    Text(errorMessage)
+                        .font(.subheadline)
+                        .foregroundStyle(.red)
                 }
             }
             .padding(24)

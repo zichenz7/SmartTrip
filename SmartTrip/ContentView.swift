@@ -1,16 +1,17 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var destination = "东京"
-    @State private var days = "3"
+    @State private var destination = ""
+    @State private var days = ""
     @State private var lodgingStatus = "recommend"
     @State private var lodgingArea = ""
-    @State private var selectedPreferences: Set<String> = ["美食", "购物", "拍照", "轻松"]
+    @State private var travelType = ""
+    @State private var selectedPreferences: Set<String> = ["", "", "", ""]
     @State private var showPasteGuide = false
-    @State private var showOnboarding = false
 
 
-    private let preferences = ["美食", "购物", "拍照", "轻松", "不想太赶"]
+    private let travelTypes = ["单人游", "情侣游", "朋友结伴", "毕业旅行", "公司团建", "家庭亲子", "无障碍旅行"]
+    private let preferences = ["美食", "购物", "拍照", "轻松"]
 
     private var trimmedDestination: String {
         destination.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -40,19 +41,6 @@ struct ContentView: View {
                             .fontWeight(.bold)
 
                         Spacer()
-
-                        Button {
-                            showOnboarding = true
-                        } label: {
-                            Label("新手教学", systemImage: "questionmark.circle")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .background(Color.blue.opacity(0.1))
-                                .foregroundStyle(.blue)
-                                .clipShape(Capsule())
-                        }
                     }
 
                     inputSection(
@@ -93,6 +81,17 @@ struct ContentView: View {
                     }
 
                     VStack(alignment: .leading, spacing: 12) {
+                        Text("旅游类型")
+                            .font(.headline)
+
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 92))], spacing: 12) {
+                            ForEach(travelTypes, id: \.self) { type in
+                                travelTypeButton(type)
+                            }
+                        }
+                    }
+
+                    VStack(alignment: .leading, spacing: 12) {
                         Text("旅行偏好")
                             .font(.headline)
 
@@ -122,11 +121,9 @@ struct ContentView: View {
                             days: trimmedDays,
                             lodgingStatus: lodgingStatus,
                             lodgingArea: trimmedLodgingArea,
+                            travelType: travelType,
                             preferences: Array(selectedPreferences).sorted()
                         )
-                    }
-                    .navigationDestination(isPresented: $showOnboarding) {
-                        OnboardingView()
                     }
                 }
                 .padding(24)
@@ -175,6 +172,21 @@ struct ContentView: View {
                 .padding(.vertical, 10)
                 .background(selectedPreferences.contains(preference) ? Color.blue.opacity(0.15) : Color.gray.opacity(0.12))
                 .foregroundStyle(selectedPreferences.contains(preference) ? Color.blue : Color.primary)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+        }
+    }
+
+    private func travelTypeButton(_ type: String) -> some View {
+        Button {
+            travelType = travelType == type ? "" : type
+        } label: {
+            Text(type)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(travelType == type ? Color.blue.opacity(0.15) : Color.gray.opacity(0.12))
+                .foregroundStyle(travelType == type ? Color.blue : Color.primary)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
         }
     }

@@ -56,6 +56,7 @@ struct DayPlan: Identifiable, Codable {
 
 struct TripPlan: Codable {
     let lodgingAdvice: LodgingAdvice
+    let foodPlaces: [PlaceItem]?
     let mustGoPlaces: [PlaceItem]
     let optionalPlaces: [PlaceItem]
     let skippedPlaces: [PlaceItem]
@@ -102,6 +103,12 @@ struct SampleTripData {
         PlaceItem(name: "涩谷", reason: "购物和年轻潮流街区。"),
         PlaceItem(name: "明治神宫", reason: "安静，适合轻松散步。"),
         PlaceItem(name: "代官山", reason: "适合咖啡、街拍和慢逛。")
+    ]
+
+    static let foodPlaces = [
+        PlaceItem(name: "筑地市场", reason: "适合早餐和海鲜小吃。"),
+        PlaceItem(name: "新宿思出横丁", reason: "适合晚餐和居酒屋氛围。"),
+        PlaceItem(name: "代官山咖啡店", reason: "适合下午休息和轻食。")
     ]
 
     static let optionalPlaces = [
@@ -167,6 +174,7 @@ struct SampleTripData {
 
     static let tripPlan = TripPlan(
         lodgingAdvice: lodgingAdvice,
+        foodPlaces: foodPlaces,
         mustGoPlaces: mustGoPlaces,
         optionalPlaces: optionalPlaces,
         skippedPlaces: skippedPlaces,
